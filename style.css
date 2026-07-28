@@ -1,0 +1,9 @@
+/* List items on this site are authored as bare <li> elements (no
+   wrapping <ul>/<ol>), matching Eric's original typed-HTML convention.
+   Without this, the browser's default UA stylesheet renders the bullet
+   marker in the outside margin, far from the padding-indented text.
+   list-style-position: inside keeps the marker right next to the text. */
+li {
+	list-style-position: inside;
+	margin: 0;
+}
