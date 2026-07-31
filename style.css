@@ -1,34 +1,10 @@
-/* List items on this site are authored as bare <li> elements (no
-   wrapping <ul>/<ol>), matching Eric's original typed-HTML convention.
-   Without this, the browser's default UA stylesheet renders the bullet
-   marker far out in the margin, disconnected from the padding-indented
-   text (list-style-position: inside instead glues it directly onto the
-   text, which reads as too cramped).
-
-   Bullets are drawn manually via ::before with an absolute offset, so the
-   marker lands at a fixed, controlled distance from the left margin --
-   roughly midway between the plain paragraph margin and the indented text
-   -- regardless of which per-element padding-left value (40/60/70/90px
-   etc, all inline, can't be read from external CSS) is in play. 25px
-   splits the difference between the two most common indent levels
-   (40px and 60px, each used ~2000 times site-wide). */
-li {
-	/* !important: some elements set list-style-type inline (circle/square,
-	   for nested levels) which otherwise overrides this specific
-	   sub-property even under an external shorthand reset, producing a
-	   duplicate native marker alongside the ::before one below. */
-	list-style-type: none !important;
-	position: relative;
-	margin: 0;
-}
-li::before {
-	content: "•";
-	position: absolute;
-	left: 25px;
-}
-li[style*="circle"]::before {
-	content: "◦";
-}
-li[style*="square"]::before {
-	content: "▪";
+/* 2026-07-28 fix wrapped every bare <li> run in a real <ul>, so the
+   browser's native list rendering (list-style: disc/circle/square,
+   outside position) now applies correctly -- the manual ::before marker
+   hack that used to compensate for unwrapped <li>s is no longer needed
+   (Marty, 2026-07-30: reset to what a bare <ul><li> renders by default).
+   ::marker is the standards way to resize just the marker glyph without
+   touching list-style-position or reaching for a fake ::before bullet. */
+li::marker {
+	font-size: 110%;
 }
