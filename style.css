@@ -1,10 +1,24 @@
 /* 2026-07-28 fix wrapped every bare <li> run in a real <ul>, so the
-   browser's native list rendering (list-style: disc/circle/square,
-   outside position) now applies correctly -- the manual ::before marker
-   hack that used to compensate for unwrapped <li>s is no longer needed
-   (Marty, 2026-07-30: reset to what a bare <ul><li> renders by default).
-   ::marker is the standards way to resize just the marker glyph without
-   touching list-style-position or reaching for a fake ::before bullet. */
+   browser's native list rendering (list-style: disc/circle/square)
+   now applies correctly -- the manual ::before marker hack that used
+   to compensate for unwrapped <li>s is no longer needed (Marty,
+   2026-07-30: reset to what a bare <ul><li> renders by default).
+   ::marker is the standards way to resize just the marker glyph
+   without reaching for a fake ::before bullet.
+
+   Eric, 2026-07-31: with the default outside position, each li's own
+   inline padding-left (40/60/70/90/100px etc, set per indent level
+   across ~4000 <li>s) stacks on TOP of the <ul>'s own ~40px UA-default
+   indent, pushing the marker to ~40px but the text to marker+padding --
+   a big, inconsistent gap between bullet and text. list-style-position:
+   inside renders the marker AT the li's own padding-left position, with
+   the browser's normal tight marker-to-text gap, so a padding-left:60px
+   <li> gets its bullet sitting right at 60px with text close behind --
+   no extra CSS needed to distinguish 60px/90px/etc, since it just
+   follows whatever padding-left each <li> already carries. */
 li::marker {
 	font-size: 110%;
+}
+li {
+	list-style-position: inside;
 }
