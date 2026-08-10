@@ -6,19 +6,31 @@
    ::marker is the standards way to resize just the marker glyph
    without reaching for a fake ::before bullet.
 
-   Eric, 2026-07-31: with the default outside position, each li's own
-   inline padding-left (40/60/70/90/100px etc, set per indent level
-   across ~4000 <li>s) stacks on TOP of the <ul>'s own ~40px UA-default
-   indent, pushing the marker to ~40px but the text to marker+padding --
-   a big, inconsistent gap between bullet and text. list-style-position:
-   inside renders the marker AT the li's own padding-left position, with
-   the browser's normal tight marker-to-text gap, so a padding-left:60px
-   <li> gets its bullet sitting right at 60px with text close behind --
-   no extra CSS needed to distinguish 60px/90px/etc, since it just
-   follows whatever padding-left each <li> already carries. */
+   Eric, 2026-07-31/2026-08-10: two rounds of feedback on indentation.
+   Round 1 (07-31) reported a big, inconsistent gap between bullet and
+   text -- caused by each li's own inline padding-left (40/60/70/90/100px
+   etc, set per indent level across ~4000 <li>s) stacking ON TOP of the
+   <ul>'s own ~40px UA-default indent. The 07-31 fix (list-style-position:
+   inside) papered over the symptom without removing the actual stacking,
+   and inside position has its own real cost: a wrapped second line of a
+   long <li> re-flows back to the container's left edge instead of hanging
+   aligned under the first line's text -- which is exactly what Eric
+   flagged in round 2 (08-10, "text following the mark should align with
+   the text itself, rather than the marker").
+
+   Proper fix: zero out the <ul>'s own default margin/padding so each
+   li's inline padding-left is the ONLY source of indentation (no
+   stacking to begin with), and restore the default outside position --
+   outside is what gives correct hanging-indent behavior for wrapped
+   lines, hanging them at the li's own padding-left rather than the
+   marker. All ~4500 <li>s were also renumbered to a consistent 60px
+   (solid) / 120px (circle) / 180px (square) 3-level scheme in the same
+   pass -- see the 2026-08-10 commit for the exact mapping. */
 li::marker {
 	font-size: 110%;
 }
-li {
-	list-style-position: inside;
+ul {
+	margin: 0;
+	padding: 0;
+	list-style-position: outside;
 }
