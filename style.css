@@ -18,14 +18,32 @@
    flagged in round 2 (08-10, "text following the mark should align with
    the text itself, rather than the marker").
 
-   Proper fix: zero out the <ul>'s own default margin/padding so each
-   li's inline padding-left is the ONLY source of indentation (no
-   stacking to begin with), and restore the default outside position --
-   outside is what gives correct hanging-indent behavior for wrapped
-   lines, hanging them at the li's own padding-left rather than the
-   marker. All ~4500 <li>s were also renumbered to a consistent 60px
-   (solid) / 120px (circle) / 180px (square) 3-level scheme in the same
-   pass -- see the 2026-08-10 commit for the exact mapping. */
+   First attempt at the round-2 fix (08-10, same day): zeroed the <ul>'s
+   margin/padding and switched each li's inline indent to PADDING-left,
+   restoring list-style-position: outside for correct hanging-indent on
+   wraps. That fixed the wrap-alignment complaint but broke marker
+   visibility entirely -- outside-positioned markers render in the space
+   to the LEFT of the li's own border-box edge, which padding does not
+   reserve (padding is inside the border box). With the <li> sitting flush
+   against the <ul>'s now-zero edge, every marker rendered at the same x=0
+   position regardless of nesting depth, off-canvas past the page's own
+   left edge -- invisible in production, confirmed by a headless-Chrome
+   render with padding on vs off. Marty independently spotted this live
+   (08-10) and, experimenting in DevTools, found that zeroing the li's
+   indent made the marker reappear next to the text -- correct diagnosis
+   of the mechanism, but as a blanket fix it would have erased the whole
+   depth-staircase this pass exists to create.
+
+   Actual fix: same indentation values, but as MARGIN-left instead of
+   padding-left. Margin, unlike padding, IS respected by an
+   outside-positioned marker as reserved space to its left, so the marker
+   now renders at the correct staircased depth for each level while
+   wrapped lines still hang-align to the text. Verified via headless-
+   Chrome screenshot before/after on a live 3-level nested example
+   (Numbers/33.html) before applying site-wide. All ~4500 <li>s were also
+   renumbered to a consistent 60px (solid) / 120px (circle) / 180px
+   (square) 3-level scheme in the same original pass -- see the
+   2026-08-10 commits for the exact mapping. */
 li::marker {
 	font-size: 110%;
 }
