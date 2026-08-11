@@ -6,49 +6,28 @@
    ::marker is the standards way to resize just the marker glyph
    without reaching for a fake ::before bullet.
 
-   Eric, 2026-07-31/2026-08-10: two rounds of feedback on indentation.
-   Round 1 (07-31) reported a big, inconsistent gap between bullet and
-   text -- caused by each li's own inline padding-left (40/60/70/90/100px
-   etc, set per indent level across ~4000 <li>s) stacking ON TOP of the
-   <ul>'s own ~40px UA-default indent. The 07-31 fix (list-style-position:
-   inside) papered over the symptom without removing the actual stacking,
-   and inside position has its own real cost: a wrapped second line of a
-   long <li> re-flows back to the container's left edge instead of hanging
-   aligned under the first line's text -- which is exactly what Eric
-   flagged in round 2 (08-10, "text following the mark should align with
-   the text itself, rather than the marker").
+   Eric, 2026-07-31 through 2026-08-11: three rounds of feedback on
+   indentation, all caused by the same underlying mistake -- simulating
+   nested depth with a FLAT <ul> and a manually-set indent value
+   (padding-left, then margin-left) on each <li>, instead of genuinely
+   nesting <ul>s. Round 1 (07-31, inconsistent gap) and round 2 (08-10,
+   invisible/misaligned markers) were both symptoms of fighting the CSS
+   box model to fake what nesting gives you for free. See the 2026-08-10
+   commits for that history if it's ever relevant again.
 
-   First attempt at the round-2 fix (08-10, same day): zeroed the <ul>'s
-   margin/padding and switched each li's inline indent to PADDING-left,
-   restoring list-style-position: outside for correct hanging-indent on
-   wraps. That fixed the wrap-alignment complaint but broke marker
-   visibility entirely -- outside-positioned markers render in the space
-   to the LEFT of the li's own border-box edge, which padding does not
-   reserve (padding is inside the border box). With the <li> sitting flush
-   against the <ul>'s now-zero edge, every marker rendered at the same x=0
-   position regardless of nesting depth, off-canvas past the page's own
-   left edge -- invisible in production, confirmed by a headless-Chrome
-   render with padding on vs off. Marty independently spotted this live
-   (08-10) and, experimenting in DevTools, found that zeroing the li's
-   indent made the marker reappear next to the text -- correct diagnosis
-   of the mechanism, but as a blanket fix it would have erased the whole
-   depth-staircase this pass exists to create.
-
-   Actual fix: same indentation values, but as MARGIN-left instead of
-   padding-left. Margin, unlike padding, IS respected by an
-   outside-positioned marker as reserved space to its left, so the marker
-   now renders at the correct staircased depth for each level while
-   wrapped lines still hang-align to the text. Verified via headless-
-   Chrome screenshot before/after on a live 3-level nested example
-   (Numbers/33.html) before applying site-wide. All ~4500 <li>s were also
-   renumbered to a consistent 60px (solid) / 120px (circle) / 180px
-   (square) 3-level scheme in the same original pass -- see the
-   2026-08-10 commits for the exact mapping. */
+   Round 3 (08-10/08-11): Eric sent a concrete working example using
+   genuinely nested <ul>s (a plain <ul>, sibling <li>s at that level, and
+   a nested <ul style="list-style-type:circle/square"> for each deeper
+   level) with NO custom padding/margin anywhere -- Marty separately asked
+   to remove all such overrides from both the stylesheet and inline
+   attributes. Verified via headless-Chrome screenshot that Eric's
+   structure renders correctly out of the box: browsers already handle
+   nested-list indentation, marker shape, and wrapped-line hanging-indent
+   correctly with zero custom CSS -- that's exactly what all three rounds
+   of feedback were asking for. All ~4500 <li>s were converted from flat
+   + inline-indent to real nesting (see the 2026-08-11 commit), so this
+   file no longer needs (and must not re-add) any margin/padding rule for
+   ul/li -- that would just reintroduce the same box-model bugs. */
 li::marker {
 	font-size: 110%;
-}
-ul {
-	margin: 0;
-	padding: 0;
-	list-style-position: outside;
 }
